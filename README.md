@@ -1,2 +1,2 @@
 # terraform-octopus
-A provisioner plugin for Terraform that installs and configures an Octopus Deploy tentacle.
+A plugin for Terraform to control Octopus Deploy.
