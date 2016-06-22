@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	resourceKeyEnvironmentName       = "name"
-	resourceCreateTimeoutEnvironment = 30 * time.Minute
-	resourceUpdateTimeoutEnvironment = 10 * time.Minute
-	resourceDeleteTimeoutEnvironment = 15 * time.Minute
+	resourceKeyEnvironmentName        = "name"
+	resourceKeyEnvironmentDescription = "description"
+	resourceCreateTimeoutEnvironment  = 30 * time.Minute
+	resourceUpdateTimeoutEnvironment  = 10 * time.Minute
+	resourceDeleteTimeoutEnvironment  = 15 * time.Minute
 )
 
 const computedPropertyDescription = "<computed>"
@@ -29,6 +30,12 @@ func resourceEnvironment() *schema.Resource {
 				Required:    true,
 				Description: "The environment name.",
 			},
+			resourceKeyEnvironmentDescription: &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "The environment description.",
+			},
 		},
 	}
 }
@@ -36,13 +43,18 @@ func resourceEnvironment() *schema.Resource {
 // Create an environment resource.
 func resourceEnvironmentCreate(data *schema.ResourceData, provider interface{}) error {
 	name := data.Get(resourceKeyEnvironmentName).(string)
+	description := data.Get(resourceKeyEnvironmentDescription).(string)
 
 	log.Printf("Create environment named '%s'.", name)
 
-	providerClient := provider.(*octopus.Client)
-	providerClient.Reset() // TODO: Replace call to Reset with appropriate API call(s).
+	client := provider.(*octopus.Client)
 
-	data.SetId(name) // TODO: Use environment Id when we actually create one.
+	environment, err := client.CreateEnvironment(name, description, 0)
+	if err != nil {
+		return err
+	}
+
+	data.SetId(environment.ID)
 
 	return nil
 }
@@ -52,10 +64,23 @@ func resourceEnvironmentRead(data *schema.ResourceData, provider interface{}) er
 	id := data.Id()
 	name := data.Get(resourceKeyEnvironmentName).(string)
 
-	log.Printf("Read environment '%s' (name = '%s'.", id, name)
+	log.Printf("Read environment '%s' (name = '%s').", id, name)
 
-	providerClient := provider.(*octopus.Client)
-	providerClient.Reset() // TODO: Replace call to Reset with appropriate API call(s).
+	client := provider.(*octopus.Client)
+	environment, err := client.GetEnvironment(id)
+	if err != nil {
+		return err
+	}
+
+	if environment == nil {
+		// Environment has been deleted.
+		data.SetId("")
+
+		return nil
+	}
+
+	data.Set(resourceKeyEnvironmentName, environment.Name)
+	data.Set(resourceKeyEnvironmentDescription, environment.Description)
 
 	return nil
 }
@@ -66,19 +91,33 @@ func resourceEnvironmentUpdate(data *schema.ResourceData, provider interface{}) 
 
 	log.Printf("Update environment '%s'.", id)
 
-	providerClient := provider.(*octopus.Client)
-
-	if data.HasChange(resourceKeyEnvironmentName) {
-		old, new := data.GetChange(resourceKeyEnvironmentName)
-		oldName := old.(string)
-		newName := new.(string)
-
-		log.Printf("Rename environment '%s' from '%s' to '%s'.", id, oldName, newName)
+	if !(data.HasChange(resourceKeyEnvironmentName) || data.HasChange(resourceKeyEnvironmentDescription)) {
+		return nil // Nothing to do.
 	}
 
-	providerClient.Reset() // TODO: Replace call to Reset with appropriate API call(s).
+	client := provider.(*octopus.Client)
+	environment, err := client.GetEnvironment(id)
+	if err != nil {
+		return err
+	}
+	if environment != nil {
+		// Environment has been deleted.
+		data.SetId("")
 
-	return nil
+		return nil
+	}
+
+	if data.HasChange(resourceKeyEnvironmentName) {
+		environment.Name = data.Get(resourceKeyEnvironmentName).(string)
+	}
+
+	if data.HasChange(resourceKeyEnvironmentDescription) {
+		environment.Description = data.Get(resourceKeyEnvironmentDescription).(string)
+	}
+
+	_, err = client.UpdateEnvironment(environment)
+
+	return err
 }
 
 // Delete an environment resource.
@@ -88,8 +127,7 @@ func resourceEnvironmentDelete(data *schema.ResourceData, provider interface{}) 
 
 	log.Printf("Delete Environment '%s' (name = '%s').", id, name)
 
-	providerClient := provider.(*octopus.Client)
-	providerClient.Reset() // TODO: Replace call to Reset with appropriate API call(s).
+	client := provider.(*octopus.Client)
 
-	return nil
+	return client.DeleteEnvironment(id)
 }

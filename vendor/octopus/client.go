@@ -4,7 +4,6 @@ package octopus
 import (
 	"bytes"
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,9 +14,6 @@ import (
 // Client is the client for the Octopus Deploy API.
 type Client struct {
 	baseAddress string
-	apiKey      string
-	username    string
-	password    string
 	stateLock   *sync.Mutex
 	httpClient  *http.Client
 }
@@ -30,11 +26,13 @@ func NewClientWithAPIKey(serverURL string, apiKey string) (*Client, error) {
 
 	return &Client{
 		serverURL,
-		apiKey,
-		"",
-		"",
 		&sync.Mutex{},
-		&http.Client{},
+		&http.Client{
+			Transport: &apiKeyAuthenticator{
+				apiKey:    apiKey,
+				transport: defaultTransport(),
+			},
+		},
 	}, nil
 }
 
@@ -46,11 +44,14 @@ func NewClientWithBasicAuth(serverURL string, username string, password string) 
 
 	return &Client{
 		serverURL,
-		"",
-		username,
-		password,
 		&sync.Mutex{},
-		&http.Client{},
+		&http.Client{
+			Transport: &usernamePasswordAuthenticator{
+				username:  username,
+				password:  password,
+				transport: defaultTransport(),
+			},
+		},
 	}, nil
 }
 
@@ -60,6 +61,35 @@ func (client *Client) Reset() {
 	defer client.stateLock.Unlock()
 
 	// TODO: Do we actually keep any state in the Octopus client?
+}
+
+// Create a request for the octopus API.
+func (client *Client) newRequest(relativeURI string, method string, body interface{}) (*http.Request, error) {
+	requestURI := fmt.Sprintf("/%s/api/%s", client.baseAddress, relativeURI)
+
+	var (
+		request    *http.Request
+		bodyReader io.Reader
+		err        error
+	)
+
+	bodyReader, err = newReaderFromJSON(body)
+	if err != nil {
+		return nil, err
+	}
+
+	request, err = http.NewRequest(method, requestURI, bodyReader)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Accept", "application/json")
+
+	if bodyReader != nil {
+		request.Header.Set("Content-Type", "application/json")
+	}
+
+	return request, nil
 }
 
 // executeRequest performs the specified request and returns the entire response body, together with the HTTP status code.
@@ -81,19 +111,19 @@ func (client *Client) executeRequest(request *http.Request) (responseBody []byte
 	return
 }
 
-// Read an APIResponse (as JSON) from the response body.
-func readAPIResponseAsJSON(responseBody []byte, statusCode int) (*APIResponse, error) {
-	apiResponse := &APIResponse{}
-	err := json.Unmarshal(responseBody, apiResponse)
+// Read an APIErrorResponse (as JSON) from the response body.
+func readAPIErrorResponseAsJSON(responseBody []byte, statusCode int) (response *APIErrorResponse, err error) {
+	response = &APIErrorResponse{}
+	err = json.Unmarshal(responseBody, response)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	if len(apiResponse.Message) == 0 {
-		apiResponse.Message = "An unexpected response was received from the compute API ('message' field was empty or missing)."
+	if len(response.Message) == 0 {
+		response.Message = "An unexpected response was received from the compute API ('ErrorMessage' field was empty or missing)."
 	}
 
-	return apiResponse, nil
+	return
 }
 
 // newReaderFromJSON serialises the specified data as JSON and returns an io.Reader over that JSON.
@@ -110,16 +140,6 @@ func newReaderFromJSON(data interface{}) (io.Reader, error) {
 	return bytes.NewReader(jsonData), nil
 }
 
-// newReaderFromXML serialises the specified data as XML and returns an io.Reader over that XML.
-func newReaderFromXML(data interface{}) (io.Reader, error) {
-	if data == nil {
-		return nil, nil
-	}
-
-	xmlData, err := xml.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes.NewReader(xmlData), nil
+func defaultTransport() *http.Transport {
+	return &http.Transport{}
 }
