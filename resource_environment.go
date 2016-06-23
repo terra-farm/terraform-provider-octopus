@@ -4,18 +4,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 	"octopus"
-	"time"
 )
 
 const (
 	resourceKeyEnvironmentName        = "name"
 	resourceKeyEnvironmentDescription = "description"
-	resourceCreateTimeoutEnvironment  = 30 * time.Minute
-	resourceUpdateTimeoutEnvironment  = 10 * time.Minute
-	resourceDeleteTimeoutEnvironment  = 15 * time.Minute
 )
-
-const computedPropertyDescription = "<computed>"
 
 func resourceEnvironment() *schema.Resource {
 	return &schema.Resource{

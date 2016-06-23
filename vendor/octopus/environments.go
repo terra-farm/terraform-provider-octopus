@@ -30,7 +30,7 @@ type createEnvironment struct {
 }
 
 // GetAllEnvironments retrieves all environments configured in Octopus Deploy.
-func (client *Client) GetAllEnvironments() (environments []Environment, err error) {
+func (client *Client) GetAllEnvironments(skip int) (environments []Environment, err error) {
 	var (
 		request       *http.Request
 		statusCode    int
@@ -38,7 +38,8 @@ func (client *Client) GetAllEnvironments() (environments []Environment, err erro
 		errorResponse *APIErrorResponse
 	)
 
-	request, err = client.newRequest("environments/all", http.MethodGet, nil)
+	requestURI := fmt.Sprintf("environments/all?skip=%d", skip)
+	request, err = client.newRequest(requestURI, http.MethodGet, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +96,7 @@ func (client *Client) GetEnvironment(id string) (environment *Environment, err e
 			return nil, err
 		}
 
-		return nil, errorResponse.ToError("Request to retrieve environment '%s' failed with status code %d.", environment.ID, statusCode)
+		return nil, errorResponse.ToError("Request to retrieve environment '%s' failed with status code %d.", id, statusCode)
 	}
 
 	err = json.Unmarshal(responseBody, environment)
