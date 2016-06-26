@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -22,6 +23,10 @@ type Client struct {
 func NewClientWithAPIKey(serverURL string, apiKey string) (*Client, error) {
 	if len(apiKey) == 0 {
 		return nil, fmt.Errorf("Must specify a valid Octopus API key.")
+	}
+
+	if strings.LastIndex(serverURL, "/") != len(serverURL) {
+		serverURL += "/"
 	}
 
 	return &Client{
@@ -65,7 +70,7 @@ func (client *Client) Reset() {
 
 // Create a request for the octopus API.
 func (client *Client) newRequest(relativeURI string, method string, body interface{}) (*http.Request, error) {
-	requestURI := fmt.Sprintf("/%s/api/%s", client.baseAddress, relativeURI)
+	requestURI := fmt.Sprintf("%s/api/%s", client.baseAddress, relativeURI)
 
 	var (
 		request    *http.Request

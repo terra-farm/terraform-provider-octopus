@@ -8,11 +8,22 @@ import (
 
 // VariableSet represents a set of variables associated with an Octopus project.
 type VariableSet struct {
-	ID        string            `json:"Id"`
-	OwnerID   string            `json:"OwnerId"`
-	Version   int               `json:"Version"`
-	Variables []Variable        `json:"Variables"`
-	Links     map[string]string `json:"Links"`
+	ID          string                 `json:"Id"`
+	OwnerID     string                 `json:"OwnerId"`
+	Version     int                    `json:"Version"`
+	Variables   []Variable             `json:"Variables"`
+	ScopeValues VariableSetScopeValues `json:"ScopeValues"`
+	Links       map[string]string      `json:"Links"`
+}
+
+// VariableSetScopeValues represents summary information for the entities referenced by a VariableSet's scope values.
+type VariableSetScopeValues struct {
+	Channels     []EntitySummary `json:"Channels,omitempty"`
+	Environments []EntitySummary `json:"Environments,omitempty"`
+	Roles        []EntitySummary `json:"Roles,omitempty"`
+	Machines     []EntitySummary `json:"Machines,omitempty"`
+	Actions      []EntitySummary `json:"Actions,omitempty"`
+	Projects     []EntitySummary `json:"Projects,omitempty"`
 }
 
 // GetVariablesByName retrieves all instances of a variable by name (regardless of scope).
@@ -61,6 +72,11 @@ func (client *Client) GetVariableSet(id string) (variableSet *VariableSet, err e
 
 	variableSet = &VariableSet{}
 	err = json.Unmarshal(responseBody, variableSet)
+	if err != nil {
+		// TODO: Special handling for errors such as json.SyntaxError
+
+		err = fmt.Errorf("Unexpected error while deserialising the response body: %s", err.Error())
+	}
 
 	return
 }

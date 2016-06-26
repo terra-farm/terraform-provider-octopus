@@ -9,7 +9,7 @@ type Variable struct {
 	ID          string         `json:"Id"`
 	Name        string         `json:"Name"`
 	Value       string         `json:"Value"`
-	Scope       VariableScopes `json:"ScopeValues"`
+	Scope       VariableScopes `json:"Scope"`
 	IsSensitive bool           `json:"IsSensitive"`
 	IsEditable  bool           `json:"IsEditable"`
 }
