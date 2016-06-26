@@ -11,15 +11,12 @@ import (
  * Integration tests
  */
 
-// Get VLAN by Id (successful).
+// Get variable set by Id (successful).
 func TestClient_GetVariableSet_Success(test *testing.T) {
 	expect := expect(test)
 
 	testServer := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		apiKeyHeader, ok := request.Header["X-Octopus-Apikey"] // Note casing - header name gets normalised
-		expect.IsTrue("header 'X-Octopus-ApiKey' is present", ok)
-		expect.EqualsInt("Header 'X-Octopus-ApiKey' value count", 1, len(apiKeyHeader))
-		expect.EqualsString("Header 'X-Octopus-ApiKey'", "my-test-api-key", apiKeyHeader[0])
+		expect.singleHeaderValue(HeaderNameOctopusAPIKey, "my-test-api-key", request)
 
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusOK)
@@ -38,7 +35,7 @@ func TestClient_GetVariableSet_Success(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	verifyGetVatiableSetTestResponse(test, variableSet)
+	verifyGetVariableSetTestResponse(test, variableSet)
 }
 
 /*
@@ -189,7 +186,7 @@ const getVariableSetTestResponse = `
 	}
 `
 
-func verifyGetVatiableSetTestResponse(test *testing.T, variableSet *VariableSet) {
+func verifyGetVariableSetTestResponse(test *testing.T, variableSet *VariableSet) {
 	expect := expect(test)
 
 	expect.NotNil("VariableSet", variableSet)
@@ -205,4 +202,14 @@ func verifyGetVatiableSetTestResponse(test *testing.T, variableSet *VariableSet)
 	variable2 := variableSet.Variables[1]
 	expect.EqualsString("VariableSet.Variables[1].ID", "56876c2b-016b-54b4-0499-4497df7ffb3e", variable2.ID)
 	expect.EqualsString("VariableSet.Variables[1].Name", "AuditingDatabase", variable2.Name)
+
+	expect.EqualsInt("VariableSet.ScopeValues.Environments.Length", 2, len(variableSet.ScopeValues.Environments))
+
+	environment1 := variableSet.ScopeValues.Environments[0]
+	expect.EqualsString("VariableSet.ScopeValues.Environments[0].ID", "Environments-130", environment1.ID)
+	expect.EqualsString("VariableSet.ScopeValues.Environments[0].Name", "Platform R2.0 Development AU", environment1.Name)
+
+	environment2 := variableSet.ScopeValues.Environments[1]
+	expect.EqualsString("VariableSet.ScopeValues.Environments[1].ID", "Environments-131", environment2.ID)
+	expect.EqualsString("VariableSet.ScopeValues.Environments[1].Name", "Platform R2.0 Automation AU", environment2.Name)
 }

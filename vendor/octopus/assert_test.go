@@ -1,7 +1,9 @@
 package octopus
 
 import (
+	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -47,4 +49,32 @@ func (expect expectHelper) EqualsInt(description string, expected int, actual in
 	if actual != expected {
 		expect.test.Fatalf("%s was %d (expected %d).", description, actual, expected)
 	}
+}
+
+func (expect expectHelper) singleHeaderValue(headerName string, expected string, request *http.Request) {
+	normalisedHeaderName := normaliseHeaderName(headerName)
+
+	headerValues, ok := request.Header[normalisedHeaderName]
+	if !ok {
+		expect.test.Fatalf("Missing request header '%s'.", headerName)
+	}
+
+	if len(headerValues) != 1 {
+		expect.test.Fatalf("Request header '%s' has %d values (expected exactly 1).", headerName, len(headerValues))
+	}
+
+	actual := headerValues[0]
+	expect.EqualsString("Header."+headerName, expected, actual)
+}
+
+// Mimic the normalisation of HTTP header names performed by net/http in order to verify them during tests.
+func normaliseHeaderName(headerName string) string {
+	segments := strings.Split(headerName, "-")
+	for index, segment := range segments {
+		segments[index] = strings.Title(
+			strings.ToLower(segment),
+		)
+	}
+
+	return strings.Join(segments, "-")
 }
