@@ -34,6 +34,7 @@ func Provider() terraform.ResourceProvider {
 		// Provider resource definitions
 		ResourcesMap: map[string]*schema.Resource{
 			"octopus_environment": resourceEnvironment(),
+			"octopus_variable":    resourceVariable(),
 		},
 
 		// Provider configuration

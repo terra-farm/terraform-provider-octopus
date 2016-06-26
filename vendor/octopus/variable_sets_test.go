@@ -4,8 +4,10 @@ import (
 	"testing"
 )
 
-// Unit test
-//
+/*
+ * Unit tests
+ */
+
 // Retrieve variables from a variable set by name.
 func Test_Get_VariableSet_VariablesByName(test *testing.T) {
 	expect := expect(test)
@@ -31,8 +33,6 @@ func Test_Get_VariableSet_VariablesByName(test *testing.T) {
 	expect.EqualsInt("len(variablesMatchingEnvironment)", 2, len(variablesMatchingEnvironment))
 }
 
-// Unit test
-//
 // Retrieve variables from a variable set by name and environment.
 func Test_Get_VariableSet_VariablesByNameAndEnvironment(test *testing.T) {
 	expect := expect(test)
@@ -50,11 +50,29 @@ func Test_Get_VariableSet_VariablesByNameAndEnvironment(test *testing.T) {
 					},
 				},
 			},
+			Variable{ // Should be returned
+				Name: "Var1",
+				Scope: VariableScopes{
+					Environments: []string{
+						"Env1",
+						"Env2",
+					},
+				},
+			},
 			Variable{
 				Name: "Var1",
 				Scope: VariableScopes{
 					Environments: []string{
 						"Env2",
+					},
+				},
+			},
+			Variable{ // Should be returned
+				Name: "Var1",
+				Scope: VariableScopes{
+					Environments: []string{
+						"Env2",
+						"Env1",
 					},
 				},
 			},
@@ -67,6 +85,8 @@ func Test_Get_VariableSet_VariablesByNameAndEnvironment(test *testing.T) {
 		},
 	}
 
-	variablesMatchingEnvironment := variableSet.GetVariablesByNameAndScope("var1", stringToPtr("env1"), nil, nil, nil, nil)
+	variablesMatchingEnvironment := variableSet.GetVariablesByNameAndScopes("var1", VariableScopes{
+		Environments: []string{"env2", "env1"},
+	})
 	expect.EqualsInt("len(variablesMatchingEnvironment)", 2, len(variablesMatchingEnvironment))
 }
