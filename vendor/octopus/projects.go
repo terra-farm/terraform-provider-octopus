@@ -6,8 +6,8 @@ import (
 	"net/http"
 )
 
-// GetProject retrieves an Octopus project by Id.
-func (client *Client) GetProject(id string) (project *Project, err error) {
+// GetProject retrieves an Octopus project by Id or slug.
+func (client *Client) GetProject(idOrSlug string) (project *Project, err error) {
 	var (
 		request       *http.Request
 		statusCode    int
@@ -15,7 +15,7 @@ func (client *Client) GetProject(id string) (project *Project, err error) {
 		errorResponse *APIErrorResponse
 	)
 
-	requestURI := fmt.Sprintf("projects/%s", id)
+	requestURI := fmt.Sprintf("projects/%s", idOrSlug)
 	request, err = client.newRequest(requestURI, http.MethodGet, nil)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func (client *Client) GetProject(id string) (project *Project, err error) {
 
 	responseBody, statusCode, err = client.executeRequest(request)
 	if err != nil {
-		err = fmt.Errorf("Error invoking request to read variable set '%s': %s", id, err.Error())
+		err = fmt.Errorf("Error invoking request to read variable set '%s': %s", idOrSlug, err.Error())
 
 		return
 	}
@@ -39,13 +39,13 @@ func (client *Client) GetProject(id string) (project *Project, err error) {
 			return nil, err
 		}
 
-		return nil, errorResponse.ToError("Request to retrieve project '%s' failed with status code %d.", id, statusCode)
+		return nil, errorResponse.ToError("Request to retrieve project '%s' failed with status code %d.", idOrSlug, statusCode)
 	}
 
 	project = &Project{}
 	err = json.Unmarshal(responseBody, project)
 	if err != nil {
-		err = fmt.Errorf("Invalid response detected when reading project '%s': %s", id, err.Error())
+		err = fmt.Errorf("Invalid response detected when reading project '%s': %s", idOrSlug, err.Error())
 	}
 
 	return
