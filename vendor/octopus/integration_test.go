@@ -28,6 +28,12 @@ func newClientTest() *ClientTest {
 type ClientTestRequestInvoker func(test *testing.T, client *Client)
 type ClientTestRequestHandler func(test *testing.T, request *http.Request) (statusCode int, responseBody string)
 
+func testRespondOK(responseBody string) ClientTestRequestHandler {
+	return func(test *testing.T, request *http.Request) (int, string) {
+		return http.StatusOK, responseBody
+	}
+}
+
 func testClientRequest(test *testing.T, clientTest *ClientTest) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		expect := expect(test)

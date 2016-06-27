@@ -1,31 +1,8 @@
 package octopus
 
 import (
-	"net/http"
 	"testing"
 )
-
-/*
- * Integration tests
- */
-
-// Get variable set by Id (successful).
-func TestClient_GetVariableSet_Success(test *testing.T) {
-	testClientRequest(test, &ClientTest{
-		APIKey: "my-test-api-key",
-		Invoke: func(test *testing.T, client *Client) {
-			variableSet, err := client.GetVariableSet("my-variable-set")
-			if err != nil {
-				test.Fatal(err)
-			}
-
-			verifyGetVariableSetTestResponse(test, variableSet)
-		},
-		Handle: func(test *testing.T, request *http.Request) (statusCode int, responseBody string) {
-			return http.StatusOK, getVariableSetTestResponse // TODO: Return a valid response here.
-		},
-	})
-}
 
 /*
  * Unit tests
@@ -112,6 +89,26 @@ func Test_VariableSet_GetVariablesByNameAndEnvironment(test *testing.T) {
 		Environments: []string{"env2", "env1"},
 	})
 	expect.EqualsInt("len(variablesMatchingEnvironment)", 2, len(variablesMatchingEnvironment))
+}
+
+/*
+ * Integration tests
+ */
+
+// Get variable set by Id (successful).
+func Test_Client_GetVariableSet_Success(test *testing.T) {
+	testClientRequest(test, &ClientTest{
+		APIKey: "my-test-api-key",
+		Invoke: func(test *testing.T, client *Client) {
+			variableSet, err := client.GetVariableSet("variableset-Projects-501")
+			if err != nil {
+				test.Fatal(err)
+			}
+
+			verifyGetVariableSetTestResponse(test, variableSet)
+		},
+		Handle: testRespondOK(getVariableSetTestResponse),
+	})
 }
 
 /*
