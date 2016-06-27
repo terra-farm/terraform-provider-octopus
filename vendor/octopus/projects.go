@@ -15,7 +15,7 @@ func (client *Client) GetProject(id string) (project *Project, err error) {
 		errorResponse *APIErrorResponse
 	)
 
-	requestURI := fmt.Sprintf("variables/%s", id)
+	requestURI := fmt.Sprintf("projects/%s", id)
 	request, err = client.newRequest(requestURI, http.MethodGet, nil)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (client *Client) UpdateProject(project *Project) (updatedProject *Project, 
 		errorResponse *APIErrorResponse
 	)
 
-	requestURI := fmt.Sprintf("variables/%s", project.ID)
+	requestURI := fmt.Sprintf("projects/%s", project.ID)
 	request, err = client.newRequest(requestURI, http.MethodPost, project)
 	if err != nil {
 		return nil, err

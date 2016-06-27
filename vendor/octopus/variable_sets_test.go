@@ -1,9 +1,7 @@
 package octopus
 
 import (
-	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
@@ -13,29 +11,20 @@ import (
 
 // Get variable set by Id (successful).
 func TestClient_GetVariableSet_Success(test *testing.T) {
-	expect := expect(test)
+	testClientRequest(test, &ClientTest{
+		APIKey: "my-test-api-key",
+		Invoke: func(test *testing.T, client *Client) {
+			variableSet, err := client.GetVariableSet("my-variable-set")
+			if err != nil {
+				test.Fatal(err)
+			}
 
-	testServer := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		expect.singleHeaderValue(HeaderNameOctopusAPIKey, "my-test-api-key", request)
-
-		writer.Header().Set("Content-Type", "application/json")
-		writer.WriteHeader(http.StatusOK)
-
-		fmt.Fprintln(writer, getVariableSetTestResponse)
-	}))
-	defer testServer.Close()
-
-	client, err := NewClientWithAPIKey(testServer.URL, "my-test-api-key")
-	if err != nil {
-		test.Fatal(err)
-	}
-
-	variableSet, err := client.GetVariableSet("my-variable-set")
-	if err != nil {
-		test.Fatal(err)
-	}
-
-	verifyGetVariableSetTestResponse(test, variableSet)
+			verifyGetVariableSetTestResponse(test, variableSet)
+		},
+		Handle: func(test *testing.T, request *http.Request) (statusCode int, responseBody string) {
+			return http.StatusOK, getVariableSetTestResponse // TODO: Return a valid response here.
+		},
+	})
 }
 
 /*

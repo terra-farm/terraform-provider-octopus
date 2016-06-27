@@ -26,6 +26,17 @@ type VariableSetScopeValues struct {
 	Projects     []EntitySummary `json:"Projects,omitempty"`
 }
 
+// GetVariableByID retrieves a specific instance of a variable by Id.
+func (variableSet *VariableSet) GetVariableByID(id string) *Variable {
+	for _, variable := range variableSet.Variables {
+		if variable.ID == id {
+			return &variable
+		}
+	}
+
+	return nil
+}
+
 // GetVariablesByName retrieves all instances of a variable by name (regardless of scope).
 func (variableSet *VariableSet) GetVariablesByName(name string) []Variable {
 	return filterVariablesByName(variableSet.Variables, name)

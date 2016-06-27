@@ -19,14 +19,10 @@ func Provider() terraform.ResourceProvider {
 				Description: "The base URL of the Octopus Deploy server.",
 			},
 			"api_key": &schema.Schema{
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				Default:   "",
-				ConflictsWith: []string{
-					"username",
-					"password",
-				},
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Default:     "",
 				Description: "The API key used to authenticate to the Octopus Deploy API (if not specified, then the OCTOPUS_API_KEY environment variable will be used).",
 			},
 		},
@@ -45,7 +41,7 @@ func Provider() terraform.ResourceProvider {
 // Configure the provider.
 // Returns the provider's compute API client.
 func configureProvider(providerSettings *schema.ResourceData) (interface{}, error) {
-	server := providerSettings.Get("server").(string)
+	server := providerSettings.Get("server_url").(string)
 	apiKey := providerSettings.Get("api_key").(string)
 
 	if isEmpty(apiKey) {

@@ -8,12 +8,13 @@ import (
 )
 
 const (
-	resourceKeyVariableProjectID   = "project"
-	resourceKeyVariableName        = "name"
-	resourceKeyVariableEnvironment = "environment"
-	resourceKeyVariableRole        = "role"
-	resourceKeyVariableMachine     = "machine"
-	resourceKeyVariableAction      = "action"
+	resourceKeyVariableProjectID    = "project"
+	resourceKeyVariableName         = "name"
+	resourceKeyVariableValue        = "value"
+	resourceKeyVariableEnvironments = "environments"
+	resourceKeyVariableRoles        = "roles"
+	resourceKeyVariableMachines     = "machines"
+	resourceKeyVariableActions      = "actions"
 )
 
 func resourceVariable() *schema.Resource {
@@ -33,33 +34,43 @@ func resourceVariable() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			resourceKeyVariableEnvironment: &schema.Schema{
-				Type: schema.TypeList,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+			resourceKeyVariableValue: &schema.Schema{
+				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+				Default:  nil,
 			},
-			resourceKeyVariableRole: &schema.Schema{
+			resourceKeyVariableEnvironments: &schema.Schema{
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 				Optional: true,
+				Computed: true,
 			},
-			resourceKeyVariableMachine: &schema.Schema{
+			resourceKeyVariableRoles: &schema.Schema{
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 				Optional: true,
+				Computed: true,
 			},
-			resourceKeyVariableAction: &schema.Schema{
+			resourceKeyVariableMachines: &schema.Schema{
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 				Optional: true,
+				Computed: true,
+			},
+			resourceKeyVariableActions: &schema.Schema{
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -73,10 +84,10 @@ func resourceVariableCreate(data *schema.ResourceData, provider interface{}) err
 	name := data.Get(resourceKeyVariableName).(string)
 
 	targetScope := octopus.VariableScopes{
-		Environments: propertyHelper.GetStringList(resourceKeyVariableEnvironment),
-		Roles:        propertyHelper.GetStringList(resourceKeyVariableRole),
-		Machines:     propertyHelper.GetStringList(resourceKeyVariableMachine),
-		Actions:      propertyHelper.GetStringList(resourceKeyVariableAction),
+		Environments: propertyHelper.GetStringList(resourceKeyVariableEnvironments),
+		Roles:        propertyHelper.GetStringList(resourceKeyVariableRoles),
+		Machines:     propertyHelper.GetStringList(resourceKeyVariableMachines),
+		Actions:      propertyHelper.GetStringList(resourceKeyVariableActions),
 	}
 
 	log.Printf("Create variable '%s' for project '%s' (must match scopes: %#v)...", name, projectID, targetScope)
@@ -88,7 +99,7 @@ func resourceVariableCreate(data *schema.ResourceData, provider interface{}) err
 		return err
 	}
 	if variableSet == nil {
-		return fmt.Errorf("Cannot find variable for project '%s'.", projectID)
+		return fmt.Errorf("Cannot find variable set for project '%s'.", projectID)
 	}
 
 	matchingVariables := variableSet.GetVariablesByNameAndScopes(name, targetScope)
@@ -119,6 +130,12 @@ func resourceVariableCreate(data *schema.ResourceData, provider interface{}) err
 
 	variable = matchingVariables[0]
 	data.SetId(variable.ID)
+	data.Set(resourceKeyVariableValue, variable.Value)
+
+	propertyHelper.SetStringList(resourceKeyVariableEnvironments, variable.Scope.Environments)
+	propertyHelper.SetStringList(resourceKeyVariableRoles, variable.Scope.Roles)
+	propertyHelper.SetStringList(resourceKeyVariableMachines, variable.Scope.Machines)
+	propertyHelper.SetStringList(resourceKeyVariableActions, variable.Scope.Actions)
 
 	return nil
 }
@@ -131,7 +148,31 @@ func resourceVariableRead(data *schema.ResourceData, provider interface{}) error
 	log.Printf("Read variable '%s' (for project '%s').", id, projectID)
 
 	providerClient := provider.(*octopus.Client)
-	providerClient.Reset() // TODO: Replace call to Reset with appropriate API call(s).
+
+	variableSet, err := providerClient.GetProjectVariableSet(projectID)
+	if err != nil {
+		return err
+	}
+	if variableSet == nil {
+		return fmt.Errorf("Cannot find variable set for project '%s'.", projectID)
+	}
+
+	variable := variableSet.GetVariableByID(id)
+	if variable == nil {
+		// Variable has been deleted.
+		data.SetId("")
+
+		return nil
+	}
+
+	data.Set(resourceKeyVariableValue, variable.Value)
+
+	log.Printf("Variable scope is now %#v", variable.Scope)
+	propertyHelper := propertyHelper(data)
+	propertyHelper.SetStringList(resourceKeyVariableEnvironments, variable.Scope.Environments)
+	propertyHelper.SetStringList(resourceKeyVariableRoles, variable.Scope.Roles)
+	propertyHelper.SetStringList(resourceKeyVariableMachines, variable.Scope.Machines)
+	propertyHelper.SetStringList(resourceKeyVariableActions, variable.Scope.Actions)
 
 	return nil
 }
@@ -160,4 +201,24 @@ func resourceVariableDelete(data *schema.ResourceData, provider interface{}) err
 	providerClient.Reset() // TODO: Replace call to Reset with appropriate API call(s).
 
 	return nil
+}
+
+// Determine whether a variable resource exists.
+func resourceVariableExists(data *schema.ResourceData, provider interface{}) (exists bool, err error) {
+	id := data.Id()
+	projectID := data.Get(resourceKeyVariableProjectID).(string)
+
+	log.Printf("Check if variable '%s' exists.", id)
+
+	client := provider.(*octopus.Client)
+
+	var variableSet *octopus.VariableSet
+	variableSet, err = client.GetProjectVariableSet(projectID)
+	if err != nil {
+		return
+	}
+
+	exists = variableSet.GetVariableByID(id) != nil
+
+	return
 }

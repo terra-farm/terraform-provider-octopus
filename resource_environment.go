@@ -17,6 +17,7 @@ func resourceEnvironment() *schema.Resource {
 		Read:   resourceEnvironmentRead,
 		Update: resourceEnvironmentUpdate,
 		Delete: resourceEnvironmentDelete,
+		Exists: resourceEnvironmentExists,
 
 		Schema: map[string]*schema.Schema{
 			resourceKeyEnvironmentName: &schema.Schema{
@@ -124,4 +125,19 @@ func resourceEnvironmentDelete(data *schema.ResourceData, provider interface{}) 
 	client := provider.(*octopus.Client)
 
 	return client.DeleteEnvironment(id)
+}
+
+// Determine whether an environment resource exists.
+func resourceEnvironmentExists(data *schema.ResourceData, provider interface{}) (exists bool, err error) {
+	id := data.Id()
+
+	log.Printf("Check if environment '%s' exists.", id)
+
+	client := provider.(*octopus.Client)
+
+	var environment *octopus.Environment
+	environment, err = client.GetEnvironment(id)
+	exists = environment != nil
+
+	return
 }

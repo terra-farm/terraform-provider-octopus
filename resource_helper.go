@@ -28,6 +28,18 @@ func (helper resourcePropertyHelper) GetStringList(key string) (elements []strin
 	return
 }
 
+func (helper resourcePropertyHelper) SetStringList(key string, elements []string) {
+	untypedElements := make([]interface{}, len(elements))
+	for index, element := range elements {
+		var untypedElement interface{}
+		untypedElement = element
+
+		untypedElements[index] = untypedElement
+	}
+
+	helper.data.Set(key, untypedElements)
+}
+
 func (helper resourcePropertyHelper) GetOptionalString(key string, allowEmpty bool) *string {
 	value := helper.data.Get(key)
 	switch typedValue := value.(type) {
