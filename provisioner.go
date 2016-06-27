@@ -15,7 +15,7 @@ func Provisioner() terraform.ResourceProvisioner {
 
 // OctopusProvisioner represents the Octopus Deploy provisioner.
 type OctopusProvisioner struct {
-	// TODO: Decide what state we need to hold.
+	// TODO: Decide what state we need to hold for the provisioner.
 }
 
 // Apply executes provisioner
