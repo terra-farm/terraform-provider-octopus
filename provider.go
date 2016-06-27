@@ -33,6 +33,10 @@ func Provider() terraform.ResourceProvider {
 			"octopus_variable":    resourceVariable(),
 		},
 
+		DataSourcesMap: map[string]*schema.Resource{
+			"octopus_project": datasourceProject(),
+		},
+
 		// Provider configuration
 		ConfigureFunc: configureProvider,
 	}

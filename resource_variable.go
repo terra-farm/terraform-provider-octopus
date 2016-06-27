@@ -96,10 +96,10 @@ func resourceVariableCreate(data *schema.ResourceData, provider interface{}) err
 
 	variableSet, err := providerClient.GetProjectVariableSet(projectID)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error retrieving variable set for project '%s': %s", projectID, err.Error())
 	}
 	if variableSet == nil {
-		return fmt.Errorf("Cannot find variable set for project '%s'.", projectID)
+		return fmt.Errorf("Cannot find variable set for project '%s'", projectID)
 	}
 
 	matchingVariables := variableSet.GetVariablesByNameAndScopes(name, targetScope)
@@ -185,9 +185,39 @@ func resourceVariableUpdate(data *schema.ResourceData, provider interface{}) err
 	log.Printf("Update variable '%s' (for project '%s').", id, projectID)
 
 	providerClient := provider.(*octopus.Client)
-	providerClient.Reset() // TODO: Replace call to Reset with appropriate API call(s).
 
-	return nil
+	variableSet, err := providerClient.GetProjectVariableSet(projectID)
+	if err != nil {
+		return err
+	}
+	if variableSet == nil {
+		return fmt.Errorf("Cannot find variable set for project '%s'.", projectID)
+	}
+
+	variable := variableSet.GetVariableByID(id)
+	if variable == nil {
+		// Variable has been deleted.
+		data.SetId("")
+
+		return nil
+	}
+
+	variableSet.UpdateVariable(id, func(variable *octopus.Variable) {
+		if data.HasChange(resourceKeyVariableValue) {
+			value, ok := data.GetOk(resourceKeyVariableValue)
+			if ok {
+				variable.Value = value.(string)
+			} else {
+				data.Set(resourceKeyVariableValue, variable.Value)
+			}
+		}
+
+		// TODO: Propagate scope changes (if any).
+	})
+
+	_, err = providerClient.UpdateVariableSet(variableSet)
+
+	return err
 }
 
 // Delete a variable resource.

@@ -28,13 +28,40 @@ type VariableSetScopeValues struct {
 
 // GetVariableByID retrieves a specific instance of a variable by Id.
 func (variableSet *VariableSet) GetVariableByID(id string) *Variable {
-	for _, variable := range variableSet.Variables {
-		if variable.ID == id {
-			return &variable
-		}
+	index := variableSet.GetVariableIndexByID(id)
+	if index != -1 {
+		return &variableSet.Variables[index]
 	}
 
 	return nil
+}
+
+// GetVariableIndexByID retrieves the index of a specific instance of a variable by Id.
+func (variableSet *VariableSet) GetVariableIndexByID(id string) int {
+	for index, variable := range variableSet.Variables {
+		if variable.ID == id {
+			return index
+		}
+	}
+
+	return -1
+}
+
+// UpdateVariableFunc represents a function that updates a variable
+type UpdateVariableFunc func(variable *Variable)
+
+// UpdateVariable updates a specific instance of a variable by Id.
+func (variableSet *VariableSet) UpdateVariable(id string, update UpdateVariableFunc) bool {
+	index := variableSet.GetVariableIndexByID(id)
+	if index == -1 {
+		return false
+	}
+
+	variable := &variableSet.Variables[index]
+	update(variable)
+	variableSet.Variables[index] = *variable
+
+	return true
 }
 
 // GetVariablesByName retrieves all instances of a variable by name (regardless of scope).
@@ -64,7 +91,9 @@ func (client *Client) GetVariableSet(id string) (variableSet *VariableSet, err e
 
 	responseBody, statusCode, err = client.executeRequest(request)
 	if err != nil {
-		return nil, err
+		err = fmt.Errorf("Error invoking request to read variable set '%s': %s", id, err.Error())
+
+		return
 	}
 
 	if statusCode == http.StatusNotFound {
@@ -84,9 +113,7 @@ func (client *Client) GetVariableSet(id string) (variableSet *VariableSet, err e
 	variableSet = &VariableSet{}
 	err = json.Unmarshal(responseBody, variableSet)
 	if err != nil {
-		// TODO: Special handling for errors such as json.SyntaxError
-
-		err = fmt.Errorf("Unexpected error while deserialising the response body: %s", err.Error())
+		err = fmt.Errorf("Invalid response detected when reading variable set '%s': %s", id, err.Error())
 	}
 
 	return
@@ -106,7 +133,7 @@ func (client *Client) UpdateVariableSet(variableSet *VariableSet) (updatedVariab
 	)
 
 	requestURI := fmt.Sprintf("variables/%s", variableSet.ID)
-	request, err = client.newRequest(requestURI, http.MethodPost, variableSet)
+	request, err = client.newRequest(requestURI, http.MethodPut, variableSet)
 	if err != nil {
 		return nil, err
 	}

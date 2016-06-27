@@ -1,4 +1,7 @@
-default: build
+default: fmt build
+
+fmt:
+	go fmt github.com/DimensionDataResearch/terraform-octopus/...
 
 build:
 	go build -o _bin/terraform-provider-octopus

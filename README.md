@@ -1,10 +1,15 @@
 # terraform-octopus
 A plugin for Terraform to control / integrate with [Octopus Deploy](https://octopus.com/).
 
-This is a work in progress. Currently, the following resource types are supported:
+This is a work in progress.
+
+Currently, the following resource types are supported:
 
 * `octopus_environment`: An Octopus Deploy environment
 * `octopus_variable`: A Octopus Deploy variable (currently only project-level variables are supported)
+
+And the following datasource types are supported:
+* `octopus_project`: An Octopus Deploy project
 
 Note that if a variable already exists with the specified name and scope, the provider will start managing the existing variable.
 
@@ -33,16 +38,21 @@ provider "octopus" {
 	api_key = "my-octopus-api-key"
 }
 
+# Projects are a data source - the provider can read from them but not create or manage them.
+data "octopus_project" "my_project" {
+	slug = "terraformtest" # The last segment of the URL in the browser when viewing the project home page.
+}
+
 resource "octopus_environment" "my_environment" {
 	name         = "MyEnvironment"
 }
 
 resource "octopus_variable" "my_variable" {
 	# This is the Id (or slug) of the project in which the variable is defined.
-	project      = "Projects-501"
+	project      = "${data.octopus_project.my_project.id}"
 
 	name         = "MyVariable"
-	value        = "My Variable Value"
+	value        = "Hello World"
 
 	# The scopes (environment, role, machine, action) to which the variable applies.
 	environments = ["${octopus_environment.my_environment.id}"]

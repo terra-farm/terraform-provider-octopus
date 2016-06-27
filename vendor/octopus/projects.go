@@ -23,7 +23,9 @@ func (client *Client) GetProject(id string) (project *Project, err error) {
 
 	responseBody, statusCode, err = client.executeRequest(request)
 	if err != nil {
-		return nil, err
+		err = fmt.Errorf("Error invoking request to read variable set '%s': %s", id, err.Error())
+
+		return
 	}
 
 	if statusCode == http.StatusNotFound {
@@ -42,6 +44,9 @@ func (client *Client) GetProject(id string) (project *Project, err error) {
 
 	project = &Project{}
 	err = json.Unmarshal(responseBody, project)
+	if err != nil {
+		err = fmt.Errorf("Invalid response detected when reading project '%s': %s", id, err.Error())
+	}
 
 	return
 }
