@@ -36,6 +36,7 @@ func Provider() terraform.ResourceProvider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"octopus_environment": datasourceEnvironment(),
 			"octopus_project":     datasourceProject(),
+			"octopus_variable":    datasourceVariable(),
 		},
 
 		// Provider configuration

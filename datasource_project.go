@@ -31,7 +31,7 @@ func datasourceProject() *schema.Resource {
 	}
 }
 
-// Read a project datasource.
+// Read a project data-source.
 func datasourceProjectRead(data *schema.ResourceData, provider interface{}) error {
 	slug := data.Get(datasourceKeyProjectSlug).(string)
 

@@ -1,17 +1,23 @@
 # terraform-octopus
 A plugin for Terraform to control / integrate with [Octopus Deploy](https://octopus.com/).
 
-This is a work in progress.
+This is a work in progress. More providers and data-sources are planned, as well as a [Provisioner](https://www.terraform.io/docs/provisioners/index.html) to install the Octopus tentacle.
 
-Currently, the following resource types are supported:
+Tested against Octopus Deploy v3.3.17.
 
-* `octopus_environment`: An Octopus Deploy environment
-* `octopus_variable`: A Octopus Deploy variable (currently only project-level variables are supported)
+The following resource types are currently supported:
 
-And the following datasource types are supported:
-* `octopus_project`: An Octopus Deploy project
+* `octopus_environment`: Creates and manages an Octopus Deploy environment
+* `octopus_variable`: Creates and manages an Octopus Deploy variable (currently only project-level variables are supported)
 
-Note that if a variable already exists with the specified name and scope, the provider will start managing the existing variable.
+Note that variables are matched on both name and combined scopes (Environments, Roles, Machines, Actions). If a variable already exists with the specified name and scopes, the provider will start managing the existing variable.
+
+The following data-source types are currently supported:
+* `octopus_environment`: Tracks an existing Octopus Deploy environment
+* `octopus_project`: Tracks an existing Octopus Deploy project
+* `octopus_variable`: Tracks an existing Octopus Deploy variable (currently only project-level variables are supported)
+
+Data-sources are similar to variables, except they are read-only. The provider will read and track their state but never modify it.
 
 To get started:
 

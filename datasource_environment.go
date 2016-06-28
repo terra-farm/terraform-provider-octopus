@@ -32,7 +32,7 @@ func datasourceEnvironment() *schema.Resource {
 	}
 }
 
-// Read a environment datasource.
+// Read a environment data-source.
 func datasourceEnvironmentRead(data *schema.ResourceData, provider interface{}) error {
 	slug := data.Get(datasourceKeyEnvironmentSlug).(string)
 
