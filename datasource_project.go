@@ -20,7 +20,7 @@ func datasourceProject() *schema.Resource {
 			datasourceKeyProjectSlug: &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The project slug (last segment of the project URL).",
+				Description: "The project slug (last segment of the project URL in Octopus UI).",
 			},
 			datasourceKeyProjectName: &schema.Schema{
 				Type:        schema.TypeString,

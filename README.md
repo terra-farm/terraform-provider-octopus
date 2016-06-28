@@ -14,6 +14,7 @@ Note that variables are matched on both name and combined scopes (Environments, 
 
 The following data-source types are currently supported:
 * `octopus_environment`: Tracks an existing Octopus Deploy environment
+* `octopus_machine`: Tracks an existing Octopus Deploy machine
 * `octopus_project`: Tracks an existing Octopus Deploy project
 * `octopus_variable`: Tracks an existing Octopus Deploy variable (currently only project-level variables are supported)
 
@@ -40,13 +41,17 @@ Create a folder containing a single `.tf` file:
 #
 
 provider "octopus" {
-	server_url = "https://my-octopus-server/"
-	api_key = "my-octopus-api-key"
+	server_url   = "https://my-octopus-server/"
+	api_key      = "my-octopus-api-key"
 }
 
 # Projects are a data source - the provider can read from them but not create or manage them.
 data "octopus_project" "my_project" {
-	slug = "terraformtest" # The last segment of the URL in the browser when viewing the project home page.
+	slug         = "terraformtest" # The last segment of the URL in the browser when viewing the project home page.
+}
+
+data "octopus_machine" "my_machine" {
+	slug         = "Machines-351" # The last segment of the URL in the browser when viewing the machine details home page.
 }
 
 resource "octopus_environment" "my_environment" {
@@ -68,7 +73,9 @@ resource "octopus_variable" "my_variable" {
 1. Run `terraform plan -out tf.plan`.
 2. Verify that everything looks ok.
 3. Run `terraform apply tf.plan`
-4. Have a look around and, when it's time to clean up...
-5. Run `terraform plan -destroy -out tf.plan`
-6. Verify that everything looks ok.
-7. Run `terraform apply tf.plan`
+4. Have a look around and
+5. Run `terraform show` to inspect the current state.
+6. when it's time to clean up...
+7. Run `terraform plan -destroy -out tf.plan`
+8. Verify that everything looks ok.
+9. Run `terraform apply tf.plan`

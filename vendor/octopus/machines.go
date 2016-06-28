@@ -41,8 +41,8 @@ type TentacleVersionDetails struct {
 	UpgradeLocked    bool   `json:"UpgradeLocked"`
 }
 
-// GetMachine retrieves an Octopus machine by Id.
-func (client *Client) GetMachine(id string) (machine *Machine, err error) {
+// GetMachine retrieves an Octopus machine by Id or slug.
+func (client *Client) GetMachine(idOrSlug string) (machine *Machine, err error) {
 	var (
 		request       *http.Request
 		statusCode    int
@@ -50,7 +50,7 @@ func (client *Client) GetMachine(id string) (machine *Machine, err error) {
 		errorResponse *APIErrorResponse
 	)
 
-	requestURI := fmt.Sprintf("machines/%s", id)
+	requestURI := fmt.Sprintf("machines/%s", idOrSlug)
 	request, err = client.newRequest(requestURI, http.MethodGet, nil)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (client *Client) GetMachine(id string) (machine *Machine, err error) {
 
 	responseBody, statusCode, err = client.executeRequest(request)
 	if err != nil {
-		err = fmt.Errorf("Error invoking request to read variable set '%s': %s", id, err.Error())
+		err = fmt.Errorf("Error invoking request to read variable set '%s': %s", idOrSlug, err.Error())
 
 		return
 	}
@@ -74,13 +74,13 @@ func (client *Client) GetMachine(id string) (machine *Machine, err error) {
 			return nil, err
 		}
 
-		return nil, errorResponse.ToError("Request to retrieve machine '%s' failed with status code %d.", id, statusCode)
+		return nil, errorResponse.ToError("Request to retrieve machine '%s' failed with status code %d.", idOrSlug, statusCode)
 	}
 
 	machine = &Machine{}
 	err = json.Unmarshal(responseBody, machine)
 	if err != nil {
-		err = fmt.Errorf("Invalid response detected when retrieving machine '%s': %s", id, err.Error())
+		err = fmt.Errorf("Invalid response detected when retrieving machine '%s': %s", idOrSlug, err.Error())
 	}
 
 	return
