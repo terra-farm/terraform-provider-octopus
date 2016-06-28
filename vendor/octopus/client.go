@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 )
@@ -104,7 +105,10 @@ func (client *Client) executeRequest(request *http.Request) (responseBody []byte
 		defer request.Body.Close()
 	}
 
-	log.Printf("Invoking %s request for '%s'...", request.Method, request.URL)
+	if os.Getenv("TEST_TF_OCTOPUS_TRACE_HTTP") != "" {
+		log.Printf("Invoking %s request for '%s'...", request.Method, request.URL)
+	}
+
 	response, err := client.httpClient.Do(request)
 	if err != nil {
 		return nil, 0, err
@@ -114,7 +118,10 @@ func (client *Client) executeRequest(request *http.Request) (responseBody []byte
 	statusCode = response.StatusCode
 
 	responseBody, err = ioutil.ReadAll(response.Body)
-	log.Printf("Status code: %d, response body: '%s'", statusCode, string(responseBody))
+
+	if os.Getenv("TEST_TF_OCTOPUS_TRACE_HTTP") != "" {
+		log.Printf("Status code: %d, response body: '%s'", statusCode, string(responseBody))
+	}
 
 	return
 }
