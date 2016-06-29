@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	resourceKeyEnvironmentName        = "name"
-	resourceKeyEnvironmentDescription = "description"
+	resourceKeyEnvironmentName          = "name"
+	resourceKeyEnvironmentDescription   = "description"
+	resourceKeyEnvironmentProjectGroups = "project_groups"
 )
 
 func resourceEnvironment() *schema.Resource {
@@ -30,6 +31,16 @@ func resourceEnvironment() *schema.Resource {
 				Optional:    true,
 				Default:     "",
 				Description: "The environment description.",
+			},
+			resourceKeyEnvironmentProjectGroups: &schema.Schema{
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Computed:    true,
+				Optional:    true,
+				Default:     nil,
+				Description: "The Ids of project groups associated with the environment.",
 			},
 		},
 	}

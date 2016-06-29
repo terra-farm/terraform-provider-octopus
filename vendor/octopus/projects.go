@@ -6,6 +6,36 @@ import (
 	"net/http"
 )
 
+// Projects represents a page of Project results.
+type Projects struct {
+	Items []Project `json:"Items"`
+
+	PagedResults
+}
+
+// Project represents an Octopus project.
+type Project struct {
+	ID                              string                    `json:"Id"`
+	Name                            string                    `json:"Name"`
+	Description                     string                    `json:"Description"`
+	Slug                            string                    `json:"Slug"`
+	VersioningStrategy              ProjectVersioningStrategy `json:"VersioningStrategy"`
+	VariableSetID                   string                    `json:"VariableSetId"`
+	IncludedLibraryVariableSetIDs   []string                  `json:"IncludedLibraryVariableSetIds"`
+	ProjectGroupID                  string                    `json:"ProjectGroupId"`
+	LifeCycleID                     string                    `json:"LifeCycleId"`
+	IsDisabled                      bool                      `json:"IsDisabled"`
+	AutoCreateRelease               bool                      `json:"AutoCreateRelease"`
+	DefaultToSkipIfAlreadyInstalled bool                      `json:"DefaultToSkipIfAlreadyInstalled"`
+	Links                           map[string]string         `json:"Links"`
+}
+
+// ProjectVersioningStrategy represents the versioning strategy for an Octopus project.
+type ProjectVersioningStrategy struct {
+	DonorPackageStepID string `json:"DonorPackageStepId"`
+	Template           string `json:"Template"`
+}
+
 // GetProject retrieves an Octopus project by Id or slug.
 func (client *Client) GetProject(idOrSlug string) (project *Project, err error) {
 	var (
@@ -23,7 +53,7 @@ func (client *Client) GetProject(idOrSlug string) (project *Project, err error) 
 
 	responseBody, statusCode, err = client.executeRequest(request)
 	if err != nil {
-		err = fmt.Errorf("Error invoking request to read variable set '%s': %s", idOrSlug, err.Error())
+		err = fmt.Errorf("Error invoking request to read project '%s': %s", idOrSlug, err.Error())
 
 		return
 	}
@@ -88,27 +118,4 @@ func (client *Client) UpdateProject(project *Project) (updatedProject *Project, 
 	err = json.Unmarshal(responseBody, updatedProject)
 
 	return
-}
-
-// Project represents an Octopus project.
-type Project struct {
-	ID                              string                    `json:"Id"`
-	Name                            string                    `json:"Name"`
-	Description                     string                    `json:"Description"`
-	Slug                            string                    `json:"Slug"`
-	VersioningStrategy              ProjectVersioningStrategy `json:"VersioningStrategy"`
-	VariableSetID                   string                    `json:"VariableSetId"`
-	IncludedLibraryVariableSetIDs   []string                  `json:"IncludedLibraryVariableSetIds"`
-	ProjectGroupID                  string                    `json:"ProjectGroupId"`
-	LifeCycleID                     string                    `json:"LifeCycleId"`
-	IsDisabled                      bool                      `json:"IsDisabled"`
-	AutoCreateRelease               bool                      `json:"AutoCreateRelease"`
-	DefaultToSkipIfAlreadyInstalled bool                      `json:"DefaultToSkipIfAlreadyInstalled"`
-	Links                           map[string]string         `json:"Links"`
-}
-
-// ProjectVersioningStrategy represents the versioning strategy for an Octopus project.
-type ProjectVersioningStrategy struct {
-	DonorPackageStepID string `json:"DonorPackageStepId"`
-	Template           string `json:"Template"`
 }
