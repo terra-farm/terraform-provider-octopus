@@ -23,8 +23,11 @@ type createEnvironment struct {
 	SortOrder   int    `json:"SortOrder"`
 }
 
-// GetAllEnvironments retrieves all environments configured in Octopus Deploy.
-func (client *Client) GetAllEnvironments(skip int) (environments []Environment, err error) {
+// GetEnvironments retrieves a page of Octopus environments.
+//
+// skip indicates the number of results to skip over.
+// Call Environments.GetSkipForNextPage() / Environments.GetSkipForPreviousPage() to get the number of items to skip for the next / previous page of results.
+func (client *Client) GetEnvironments(skip int) (environments []Environment, err error) {
 	var (
 		request       *http.Request
 		statusCode    int

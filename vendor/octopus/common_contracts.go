@@ -22,17 +22,17 @@ type PagedResults struct {
 	Links        map[string]string `json:"Links"`
 }
 
-// SkipForNextPage gets the number of items to skip for the next page of results.
+// GetSkipForNextPage gets the number of items to skip for the next page of results.
 //
 // Returns false if there is no next page.
-func (pagedResults *PagedResults) SkipForNextPage() (skip int, ok bool) {
+func (pagedResults *PagedResults) GetSkipForNextPage() (skip int, ok bool) {
 	return pagedResults.skipForPageLink("Page.Next")
 }
 
-// SkipForPreviousPage gets the number of items to skip for the previous page of results.
+// GetSkipForPreviousPage gets the number of items to skip for the previous page of results.
 //
 // Returns false if there is no previous page.
-func (pagedResults *PagedResults) SkipForPreviousPage() (skip int, ok bool) {
+func (pagedResults *PagedResults) GetSkipForPreviousPage() (skip int, ok bool) {
 	return pagedResults.skipForPageLink("Page.Previous")
 }
 

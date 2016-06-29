@@ -36,6 +36,54 @@ type ProjectVersioningStrategy struct {
 	Template           string `json:"Template"`
 }
 
+// GetProjects retrieves a page of Octopus projects.
+//
+// skip indicates the number of results to skip over.
+// Call Projects.GetSkipForNextPage() / Projects.GetSkipForPreviousPage() to get the number of items to skip for the next / previous page of results.
+func (client *Client) GetProjects(skip int) (projects *Projects, err error) {
+	var (
+		request       *http.Request
+		statusCode    int
+		responseBody  []byte
+		errorResponse *APIErrorResponse
+	)
+
+	requestURI := fmt.Sprintf("projects?skip=%d", skip)
+	request, err = client.newRequest(requestURI, http.MethodGet, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	responseBody, statusCode, err = client.executeRequest(request)
+	if err != nil {
+		err = fmt.Errorf("Error invoking request to read projects: %s", err.Error())
+
+		return
+	}
+
+	if statusCode == http.StatusNotFound {
+		// Environment not found.
+		return nil, nil
+	}
+
+	if statusCode != http.StatusOK {
+		errorResponse, err = readAPIErrorResponseAsJSON(responseBody, statusCode)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, errorResponse.ToError("Request to retrieve projects failed with status code %d.", statusCode)
+	}
+
+	projects = &Projects{}
+	err = json.Unmarshal(responseBody, projects)
+	if err != nil {
+		err = fmt.Errorf("Invalid response detected when reading projects: %s", err.Error())
+	}
+
+	return
+}
+
 // GetProject retrieves an Octopus project by Id or slug.
 func (client *Client) GetProject(idOrSlug string) (project *Project, err error) {
 	var (

@@ -26,7 +26,7 @@ type ProjectGroups struct {
 // GetProjectGroups retrieves a page of Octopus project groups.
 //
 // skip indicates the number of results to skip over.
-// Call ProjectGroups.SkipForNextPage() / ProjectGroups.SkipForPreviousPage() to get the number of items to skip for the next / previous page of results.
+// Call ProjectGroups.GetSkipForNextPage() / ProjectGroups.GetSkipForPreviousPage() to get the number of items to skip for the next / previous page of results.
 func (client *Client) GetProjectGroups(skip int) (projectGroups *ProjectGroups, err error) {
 	var (
 		request       *http.Request
