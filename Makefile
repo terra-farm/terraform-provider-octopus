@@ -1,11 +1,11 @@
-default: fmt build
+default: build test
 
 fmt:
 	go fmt github.com/DimensionDataResearch/terraform-octopus/...
 
-build:
+build: fmt
 	go build -o _bin/terraform-provider-octopus
 	cp _bin/terraform-provider-octopus _bin/terraform-provisioner-octopus
 
-test:
+test: fmt
 	go test -v github.com/DimensionDataResearch/terraform-octopus/vendor/octopus
