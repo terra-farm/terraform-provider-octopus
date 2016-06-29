@@ -1,0 +1,3 @@
+[submodule "vendor/octopus"]
+	path = vendor/octopus
+	url = https://github.com/DimensionDataResearch/go-octo-api.git
