@@ -29,8 +29,16 @@ type ClientTestRequestInvoker func(test *testing.T, client *Client)
 type ClientTestRequestHandler func(test *testing.T, request *http.Request) (statusCode int, responseBody string)
 
 func testRespondOK(responseBody string) ClientTestRequestHandler {
+	return testRespond(http.StatusOK, responseBody)
+}
+
+func testRespondCreated(responseBody string) ClientTestRequestHandler {
+	return testRespond(http.StatusCreated, responseBody)
+}
+
+func testRespond(statusCode int, responseBody string) ClientTestRequestHandler {
 	return func(test *testing.T, request *http.Request) (int, string) {
-		return http.StatusOK, responseBody
+		return statusCode, responseBody
 	}
 }
 

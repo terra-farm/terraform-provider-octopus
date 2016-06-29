@@ -8,18 +8,12 @@ import (
 
 // Environment represents an Octopus environment.
 type Environment struct {
-	ID               string           `json:"Id"`
-	Name             string           `json:"Name"`
-	Description      string           `json:"Description"`
-	SortOrder        int              `json:"SortOrder"`
-	UseGuidedFailure bool             `json:"UseGuidedFailure"`
-	Links            EnvironmentLinks `json:"Links"`
-}
-
-// EnvironmentLinks represents the links associated with an Octopus environment.
-type EnvironmentLinks struct {
-	Self     map[string]string `json:"Self"`
-	Machines map[string]string `json:"Machines"`
+	ID               string            `json:"Id"`
+	Name             string            `json:"Name"`
+	Description      string            `json:"Description"`
+	SortOrder        int               `json:"SortOrder"`
+	UseGuidedFailure bool              `json:"UseGuidedFailure"`
+	Links            map[string]string `json:"Links"`
 }
 
 // Request body when creating a new environment.
@@ -99,6 +93,7 @@ func (client *Client) GetEnvironment(id string) (environment *Environment, err e
 		return nil, errorResponse.ToError("Request to retrieve environment '%s' failed with status code %d.", id, statusCode)
 	}
 
+	environment = &Environment{}
 	err = json.Unmarshal(responseBody, environment)
 
 	return
@@ -127,15 +122,16 @@ func (client *Client) CreateEnvironment(name string, description string, sortOrd
 		return nil, err
 	}
 
-	if statusCode != http.StatusOK {
+	if statusCode != http.StatusCreated {
 		errorResponse, err = readAPIErrorResponseAsJSON(responseBody, statusCode)
 		if err != nil {
 			return nil, err
 		}
 
-		return nil, errorResponse.ToError("Request to update environment '%s' failed with status code %d", name, statusCode)
+		return nil, errorResponse.ToError("Request to create environment '%s' failed with status code %d", name, statusCode)
 	}
 
+	environment = &Environment{}
 	err = json.Unmarshal(responseBody, environment)
 
 	return
@@ -178,6 +174,7 @@ func (client *Client) UpdateEnvironment(environment *Environment) (updatedEnviro
 		return nil, errorResponse.ToError("Request to update environment '%s' failed with status code %d", environment.ID, statusCode)
 	}
 
+	updatedEnvironment = &Environment{}
 	err = json.Unmarshal(responseBody, updatedEnvironment)
 
 	return
