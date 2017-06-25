@@ -42,6 +42,28 @@ resource "azurerm_virtual_machine" "octo" {
 	}
 }
 
+# Configure WinRM to enable SSL (since it's otherwise unusable, given Azure's default config).
+resource "azurerm_virtual_machine_extension" "configure_winrm" {
+	name                 = "ConfigureWinRM"
+	location             = "${var.region_name}"
+	resource_group_name  = "${var.resource_group_name}"
+	virtual_machine_name = "${azurerm_virtual_machine.octo.name}"
+	publisher            = "Microsoft.Compute"
+	type                 = "CustomScriptExtension"
+	type_handler_version = "1.8"
+
+	settings = <<SETTINGS
+		{
+			"fileUris": [
+				"https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-winrm-windows/ConfigureWinRM.ps1",
+				"https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-winrm-windows/makecert.exe",
+				"https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-winrm-windows/winrmconf.cmd"
+			],
+			"commandToExecute": "Powershell -ExecutionPolicy Unrestricted -file ConfigureWinRM.ps1 -HostName '${azurerm_public_ip.octo.fqdn}'"
+		}
+SETTINGS
+}
+
 # Install and configure the Octopus Deploy server.
 resource "null_resource" "octo_server_install" {
 	provisioner "file" {
@@ -51,8 +73,11 @@ resource "null_resource" "octo_server_install" {
 		connection {
 			type 		= "winrm"
 			host 		= "${azurerm_public_ip.octo.ip_address}"
+			port		= 5986
 			user 		= "${var.admin_username}"
 			password 	= "${var.admin_password}"
+			https		= true
+			insecure	= true # We're using a self-signed certificate
 		}
 	}
 	
@@ -64,13 +89,17 @@ resource "null_resource" "octo_server_install" {
 		connection {
 			type 		= "winrm"
 			host 		= "${azurerm_public_ip.octo.ip_address}"
+			port		= 5986
 			user 		= "${var.admin_username}"
 			password 	= "${var.admin_password}"
+			https		= true
+			insecure	= true # We're using a self-signed certificate
 		}
 	}
 	
 	depends_on = [
 		"azurerm_virtual_machine.octo",
+		"azurerm_virtual_machine_extension.configure_winrm",
 		"azurerm_public_ip.octo",
 		"azurerm_network_security_group.default",
 		"azurerm_sql_database.octo"

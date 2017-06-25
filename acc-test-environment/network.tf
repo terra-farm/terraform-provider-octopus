@@ -57,7 +57,7 @@ resource "azurerm_network_security_group" "default" {
         access                      = "Allow"
         protocol                    = "Tcp"
         source_port_range           = "*"
-        destination_port_range      = "5985" # HTTP
+        destination_port_range      = "5986" # HTTPS
         source_address_prefix       = "*"
         destination_address_prefix  = "*"
     }
@@ -69,5 +69,6 @@ resource "azurerm_public_ip" "octo" {
 	location 			= "${var.region_name}"
 	resource_group_name = "${var.resource_group_name}"
 
-	public_ip_address_allocation = "static"
+    domain_name_label               = "tf-octo-acc-test-${var.uniqueness_key}"
+	public_ip_address_allocation    = "static"
 }
