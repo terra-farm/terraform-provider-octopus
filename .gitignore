@@ -26,3 +26,9 @@ _testmain.go
 
 # Mac
 .DS_Store
+
+# Terraform local state and variables
+.terraform/
+.terraform.tfstate*
+terraform.tfstate*
+terraform.tfvars
