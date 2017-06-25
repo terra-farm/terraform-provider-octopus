@@ -40,4 +40,4 @@ variable "octo_vm_instance_type"    { default = "Standard_A3" }
 variable "admin_username"           { default = "octo-admin" }
 
 # The administrator password for the Octopus and SQL servers.
-variable "initial_admin_password"   { }
+variable "admin_password"   { }

@@ -8,7 +8,7 @@ resource "azurerm_sql_server" "primary" {
     version             = "12.0"
 
     administrator_login          = "${var.admin_username}"
-    administrator_login_password = "${var.initial_admin_password}"
+    administrator_login_password = "${var.admin_password}"
 }
 
 # Database used by the environment's Octopus server

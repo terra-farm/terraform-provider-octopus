@@ -24,7 +24,7 @@ resource "azurerm_virtual_machine" "octo" {
 	os_profile {
 		computer_name 		= "octo-${var.uniqueness_key}"
 		admin_username 		= "${var.admin_username}"
-		admin_password		= "${var.initial_admin_password}"
+		admin_password		= "${var.admin_password}"
 	}
 
 	os_profile_windows_config {
@@ -40,6 +40,26 @@ resource "azurerm_virtual_machine" "octo" {
 		public_ip			= "${azurerm_public_ip.octo.ip_address}"
 		private_ip			= "${azurerm_network_interface.octo.private_ip_address}"
 	}
+}
+
+# Install Octopus Deploy
+resource "null_resource" "octo_provisioning" {
+	provisioner "remote_exec" {
+		script = "scripts/Provision-OctopusServer.ps1"
+		
+		connection {
+			type 		= "winrm"
+			host 		= "${azurerm_public_ip.octo.ip_address}"
+			user 		= "${var.admin_username}"
+			password 	= "${var.admin_password}"
+		}
+	}
+	
+	depends_on = [
+		"azurerm_virtual_machine.octo",
+		"azurerm_public_ip.octo",
+		"azurerm_network_security_group.default"
+	]
 }
 
 # TODO: Add provisioner to install and configure Octopus Server.
