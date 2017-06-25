@@ -42,10 +42,24 @@ resource "azurerm_virtual_machine" "octo" {
 	}
 }
 
-# Install Octopus Deploy
-resource "null_resource" "octo_provisioning" {
-	provisioner "remote_exec" {
-		script = "scripts/Provision-OctopusServer.ps1"
+# Install and configure the Octopus Deploy server.
+resource "null_resource" "octo_server_install" {
+	provisioner "file" {
+		source		= "scripts/Install-OctopusServer.ps1"
+		destination	= "C:\\Install-OctopusServer.ps1"
+
+		connection {
+			type 		= "winrm"
+			host 		= "${azurerm_public_ip.octo.ip_address}"
+			user 		= "${var.admin_username}"
+			password 	= "${var.admin_password}"
+		}
+	}
+	
+	provisioner "remote-exec" {
+		inline = [
+			"C:\\Install-OctopusServer.ps1 -SqlServerHost '${azurerm_sql_server.primary.fully_qualified_domain_name}' -Database '${azurerm_sql_database.octo.name}' -User '${var.admin_username}' -Password '${var.admin_password}'"
+		]
 		
 		connection {
 			type 		= "winrm"
@@ -58,8 +72,7 @@ resource "null_resource" "octo_provisioning" {
 	depends_on = [
 		"azurerm_virtual_machine.octo",
 		"azurerm_public_ip.octo",
-		"azurerm_network_security_group.default"
+		"azurerm_network_security_group.default",
+		"azurerm_sql_database.octo"
 	]
 }
-
-# TODO: Add provisioner to install and configure Octopus Server.
