@@ -3,7 +3,7 @@ resource "azurerm_virtual_machine" "octo" {
 	name 					= "octo-${var.uniqueness_key}"
 	location 				= "${var.region_name}"
 	resource_group_name 	= "${var.resource_group_name}"
-	network_interface_ids 	= [ "${azurerm_network_interface.primary.id}" ]
+	network_interface_ids 	= [ "${azurerm_network_interface.octo.id}" ]
 
 	vm_size 				= "${var.octo_vm_instance_type}"
 
@@ -23,7 +23,7 @@ resource "azurerm_virtual_machine" "octo" {
 
 	os_profile {
 		computer_name 		= "octo-${var.uniqueness_key}"
-		admin_username 		= "octo-admin"
+		admin_username 		= "${var.admin_username}"
 		admin_password		= "${var.initial_admin_password}"
 	}
 
@@ -37,7 +37,9 @@ resource "azurerm_virtual_machine" "octo" {
 	}
 
 	tags {
-		public_ip			= "${azurerm_public_ip.primary.ip_address}"
-		private_ip			= "${azurerm_network_interface.primary.private_ip_address}"
+		public_ip			= "${azurerm_public_ip.octo.ip_address}"
+		private_ip			= "${azurerm_network_interface.octo.private_ip_address}"
 	}
 }
+
+# TODO: Add provisioner to install and configure Octopus Server.
